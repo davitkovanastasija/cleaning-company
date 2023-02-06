@@ -6,7 +6,7 @@ Because we don't need the app running all the time, we can use one-off container
 # Copy the .env.example to .env
 cp .env.example .env
 # Install composer
-docker exec composer install
+docker run --rm -it --volume $PWD:/app composer install
 # Set the application key, needed for various Laravel-based tasks
 docker run --rm -it --volume $PWD:/app php:8.1-cli php /app/artisan key:generate
 # Run this command, everytime we want the file containing the schedules generated. It will create the file in: /storage/app
