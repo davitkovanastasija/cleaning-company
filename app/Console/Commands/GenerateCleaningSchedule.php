@@ -14,7 +14,9 @@ class GenerateCleaningSchedule extends Command
      */
     protected $signature = 'generate:schedule {email? : If provided, the csv file will be sent to the email address}';
     
+    // This property will store the last working day of the month. Every new month it's value will be reset. This property will be used to schedule window cleaning on the last working day of the month
     protected $last_working_day;
+    // We will use this property to schedule a refrigerator cleaning on the first vacuming day and them mark it as completed for the month. Every new month, we will reset this property to false in order for refrigerator cleaning to be scheduled again.
     protected $refrigerator_cleaned;
 
     /**
@@ -46,19 +48,21 @@ class GenerateCleaningSchedule extends Command
     {
         $current_date = strtotime(date('Y-m-d'));
         $end_date = strtotime('+3 months', $current_date);
+
+        // write headers to a CSV file
+        $file = fopen(storage_path('app/schedule.csv'), 'w');
+        fputcsv($file, ['Date', 'Activity', 'Total Time (HH:mm)']);
         
-        $csv_data = [];
         while ($current_date <= $end_date) {
             $day = date('w', $current_date);
+            $activity = [];
+            $total_time = 0;
 
-            // If current date is 1st of the month, reset refrigerator_cleaned and last_working_day
+            // If current date is 1st of the month, reset refrigerator_cleaned and last_working_day values so the refrigerator and windows can be scheduled for cleaning again
             if(date('d', $current_date) == 1) {
                 $this->refrigerator_cleaned = false;
                 $this->last_working_day = $this->lastWorkingDay($current_date);
             }
-
-            $activity = [];
-            $total_time = 0;
 
             if($day != config('constants.days.saturday') && $day != config('constants.days.sunday')) {
                 // Check if current day is Tuesday or Thursday
@@ -82,23 +86,19 @@ class GenerateCleaningSchedule extends Command
                         $total_time += $time;
                     }
 
-                    $csv_data[] = [
+                    $csv_data = [
                         date('Y-m-d', $current_date),
                         implode(', ', array_column($activity, 0)),
                         sprintf('%02d:%02d', floor($total_time / 60), $total_time % 60)
                     ];
+
+                    // write the activities in the csv file
+                    fputcsv($file, $csv_data);
                 }
             }
 
+            // get the next date
             $current_date = strtotime('+1 day', $current_date);
-        }
-
-        // write all rows to a CSV file
-        $file = fopen(storage_path('app/schedule.csv'), 'w');
-        fputcsv($file, ['Date', 'Activity', 'Total Time (HH:mm)']);
-        
-        foreach ($csv_data as $data) {
-            fputcsv($file, $data);
         }
 
         fclose($file);
