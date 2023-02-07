@@ -15,5 +15,14 @@ return [
             'duration' => 50
         ]
     ],
+    'days' => [
+        'monday' => 1,
+        'tuesday' => 2,
+        'wednesday' => 3,
+        'thursday' => 4,
+        'friday' => 5,
+        'saturday' => 6,
+        'sunday' => 0
+    ],
     'email_subject' => 'Cleaning Schedule'
 ];
