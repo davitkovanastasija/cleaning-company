@@ -13,8 +13,9 @@ class GenerateCleaningSchedule extends Command
      * @var string
      */
     protected $signature = 'generate:schedule {email? : If provided, the csv file will be sent to the email address}';
+    
     protected $last_working_day;
-    protected $refrigerator_cleaned = false;
+    protected $refrigerator_cleaned;
 
     /**
      * The console command description.
@@ -31,6 +32,9 @@ class GenerateCleaningSchedule extends Command
     public function __construct()
     {
         parent::__construct();
+
+        $this->last_working_day = $this->lastWorkingDay(strtotime(date('Y-m-d')));
+        $this->refrigerator_cleaned = false; 
     }
 
     /**
@@ -42,8 +46,7 @@ class GenerateCleaningSchedule extends Command
     {
         $current_date = strtotime(date('Y-m-d'));
         $end_date = strtotime('+3 months', $current_date);
-        $this->last_working_day = $this->lastWorkingDay($current_date);
-
+        
         $csv_data = [];
         while ($current_date <= $end_date) {
             $day = date('w', $current_date);
